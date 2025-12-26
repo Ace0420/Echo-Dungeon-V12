@@ -4847,74 +4847,31 @@
         }
 
         // ------------------------------------------------------------
-        // SECTION 86: MASTER INITIALIZATION
+        // SECTION 86: SIMPLE STARTUP
         // ------------------------------------------------------------
         
-        function masterInit() {
-            // Check browser support
-            checkBrowserSupport();
-            showCompatibilityWarning();
-            
-            // Setup keyboard fallback
-            setupKeyboardFallback();
-            
-            // Override the click handler
-            micButton.onclick = handleClickEnhanced;
-            
-            // Prevent context menu on long press
-            micButton.addEventListener('contextmenu', (e) => e.preventDefault());
-            
-            // Initial state
-            game.initialized = true;
-            
-            debugLog('Echo Dungeon V12 initialized.');
-        }
-
-        // ------------------------------------------------------------
-        // SECTION 87: DOM CONTENT LOADED - FINAL STARTUP
-        // ------------------------------------------------------------
+        checkBrowserSupport();
         
-        document.addEventListener('DOMContentLoaded', () => {
-            // Run master initialization
-            masterInit();
-            
-            // Welcome message after short delay
-            setTimeout(() => {
-                speak('Echo Dungeon Version 12 is ready. Tap the screen to begin.');
-            }, 1000);
+        micButton.onclick = function() {
+            if (!game.started && !game.needsClass) {
+                // First tap - initialize
+                game.needsClass = true;
+                speak('Choose your class. Warrior, Mage, or Rogue. Tap and speak.');
+            } else {
+                startListening();
+            }
+        };
+        
+        micButton.addEventListener('contextmenu', function(e) { 
+            e.preventDefault(); 
         });
-
-        // ------------------------------------------------------------
-        // SECTION 88: WINDOW LOAD FALLBACK
-        // In case DOMContentLoaded already fired
-        // ------------------------------------------------------------
         
-        if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            setTimeout(() => {
-                if (!game.initialized) {
-                    masterInit();
-                    speak('Echo Dungeon Version 12 is ready. Tap the screen to begin.');
-                }
-            }, 500);
-        }
-
-        // ------------------------------------------------------------
-        // ECHO DUNGEON V12 - COMPLETE
-        // Copyright 2025 Asa Hartz Games
-        // FREE for the blind gaming community
-        // 
-        // Voice Commands Quick Reference:
-        // - Movement: north, south, east, west
-        // - Combat: attack, defend, special, cast [spell], flee
-        // - Items: use potion, equip [item], inventory, status
-        // - Explore: search, open chest, merchant, stairs, fountain
-        // - Save: save game, load game, list characters
-        // - Help: help, commands, hint, tips
-        //
-        // Contact: Acejames419@gmail.com
-        // ------------------------------------------------------------
+        // Speak immediately on load
+        setTimeout(function() {
+            speak('Echo Dungeon Version 12. Tap the screen to begin.');
+        }, 1000);
 
     </script>
 </body>
-
 </html>
+
