@@ -680,7 +680,7 @@
                     const command = event.results[0][0].transcript.toLowerCase().trim();
                     displayText(`You said: "${command}"`);
                     stopListening();
-                    setTimeout(() => handleCommand(command), 500);
+                    setTimeout(() => processCommand(command), 500);
                 };
                 
                 game.recognition.onerror = (event) => {
@@ -4875,5 +4875,6 @@
     </script>
 </body>
 </html>
+
 
 
