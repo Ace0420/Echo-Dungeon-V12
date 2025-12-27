@@ -2651,8 +2651,9 @@
                 game.player.specialItems.push(itemToBuy.name);
                 speak(`You bought ${itemToBuy.name} for ${itemToBuy.price} gold! ${itemToBuy.effect}. This is now permanently active!`);
             } else if (itemToBuy.type === 'special_ring') {
-                game.player.inventory.push(itemToBuy.name);
-                speak(`You bought ${itemToBuy.name} for ${itemToBuy.price} gold! ${itemToBuy.effect}. Say wear ring to equip it.`);
+    // Auto-equip ring on purchase - bypasses 10 ring limit!
+    game.player.equippedRings.push(itemToBuy.name);
+    speak(`You bought and equipped ${itemToBuy.name} for ${itemToBuy.price} gold! ${itemToBuy.effect} You now have ${game.player.equippedRings.length} rings equipped.`);
             } else if (itemToBuy.type === 'special_amulet') {
                 game.player.inventory.push(itemToBuy.name);
                 speak(`You bought ${itemToBuy.name} for ${itemToBuy.price} gold! Say equip amulet to wear it.`);
@@ -4876,6 +4877,7 @@
     </script>
 </body>
 </html>
+
 
 
 
