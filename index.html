@@ -63,7 +63,7 @@
 </head>
 <body>
     <div id="textDisplay" role="status" aria-live="polite"></div>
-    <button id="micButton" class="start-button" aria-label="Voice command button - Tap to speak"></button>
+    <button id="micButton" class="start-button" onclick="handleClick()" aria-label="Voice command button - Tap to speak"></button>
 
     <script>
         // ============================================================
@@ -4847,31 +4847,33 @@
         }
 
         // ------------------------------------------------------------
-        // SECTION 86: SIMPLE STARTUP
+        // SECTION 86: SIMPLE INITIALIZATION (V10.5 STYLE)
         // ------------------------------------------------------------
         
-        checkBrowserSupport();
-        
-        micButton.onclick = function() {
-            if (!game.started && !game.needsClass) {
-                // First tap - initialize
-                game.needsClass = true;
-                speak('Choose your class. Warrior, Mage, or Rogue. Tap and speak.');
+        function initializeGame() {
+            game.initialized = true;
+            micButton.classList.remove('start-button');
+            speak("Welcome to Echo Dungeon V12! Say load game to continue, or choose your class: warrior, mage, or rogue.");
+        }
+
+        function handleClick() {
+            if (!game.initialized) {
+                initializeGame();
             } else {
                 startListening();
             }
-        };
-        
-        micButton.addEventListener('contextmenu', function(e) { 
-            e.preventDefault(); 
-        });
-        
-        // Speak immediately on load
-        setTimeout(function() {
-            speak('Echo Dungeon Version 12. Tap the screen to begin.');
-        }, 1000);
+        }
 
+        document.addEventListener('DOMContentLoaded', function() {
+            checkBrowserSupport();
+            setTimeout(function() {
+                speak('Echo Dungeon V12 is ready. Tap the screen to begin.');
+            }, 1000);
+        });
+
+        micButton.addEventListener('contextmenu', function(e) { e.preventDefault(); });
     </script>
 </body>
 </html>
+
 
