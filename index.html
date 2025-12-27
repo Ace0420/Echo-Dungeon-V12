@@ -2491,11 +2491,12 @@
                     (!a.minLevel || a.minLevel <= game.dungeon.currentLevel)
                 );
                 
-                if (availableAbilities.length > 0) {
-                    const ability = availableAbilities[Math.floor(Math.random() * availableAbilities.length)];
-                    game.player.inventory.push(ability.name);
-                    messages.push(`A ${ability.name} ability book! Say read book to learn it.`);
-                }
+              if (availableAbilities.length > 0) {
+    const ability = availableAbilities[Math.floor(Math.random() * availableAbilities.length)];
+    const bookName = `Book of ${ability.name}`;
+    game.player.inventory.push(bookName);
+    messages.push(`A ${bookName}! Say read book to learn it.`);
+              }
             }
             
             if (messages.length === 1) {
@@ -4875,6 +4876,7 @@
     </script>
 </body>
 </html>
+
 
 
 
