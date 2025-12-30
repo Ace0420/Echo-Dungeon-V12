@@ -988,148 +988,161 @@
         }
 
         // ------------------------------------------------------------
-        // SECTION 25: RING SYSTEM (Preserved from V10.5)
-        // ------------------------------------------------------------
+// SECTION 25: RING SYSTEM (Preserved from V10.5)
+// ------------------------------------------------------------
+
+function equipRing(command) {
+    // Find which ring the player wants to equip
+    let ringName = null;
+    
+    for (let ring of rings) {
+        if (command.includes(ring.name.toLowerCase())) {
+            ringName = ring.name;
+            break;
+        }
+    }
+    
+    // Check for Ring of Regeneration from merchant
+    if (command.includes('regeneration')) {
+        ringName = 'Ring of Regeneration';
+    }
+    
+    // If no specific ring named, list available
+    if (!ringName) {
+        const availableRings = game.player.inventory.filter(item =>
+            rings.some(r => r.name === item) || item === 'Ring of Regeneration'
+        );
+        if (availableRings.length > 0) {
+            speak(`You have: ${availableRings.join(', ')}. Say which one to equip.`);
+        } else {
+            speak('You have no rings. Find them in treasure chests or by searching rooms.');
+        }
+        return;
+    }
+    
+    // Check if player has this ring in inventory
+    const ringIndex = game.player.inventory.findIndex(item => item === ringName);
+    if (ringIndex === -1) {
+        speak(`You do not have a ${ringName}.`);
+        return;
+    }
+    
+    // Check if already wearing 10 rings
+    if (game.player.equippedRings.length >= 10) {
+        speak('You already have 10 rings equipped. Say remove ring first.');
+        return;
+    }
+    
+    // Check if already wearing 2 of the same ring (stack limit)
+    const equippedCount = game.player.equippedRings.filter(r => r === ringName).length;
+    if (equippedCount >= 2) {
+        speak(`You already have 2 ${ringName} equipped. You can only stack 2 of the same ring.`);
+        return;
+    }
+    
+    // Get ring data
+    const ringData = rings.find(r => r.name === ringName);
+    
+    // Remove from inventory and add to equipped
+    game.player.inventory.splice(ringIndex, 1);
+    game.player.equippedRings.push(ringName);
+    
+    // Apply stat bonuses
+    if (ringName === 'Ring of Regeneration') {
+        speak(`You equip the ${ringName}. You will restore 50 health per turn in combat! You have ${game.player.equippedRings.length} rings equipped.`);
+    } else if (ringData && ringData.stat === 'maxHealth') {
+        game.player.maxHealth += ringData.value;
+        game.player.health += ringData.value;
+        speak(`You equip the ${ringName}. Your max health increased by ${ringData.value}! You have ${game.player.equippedRings.length} rings equipped.`);
+    } else if (ringData && ringData.stat === 'maxMana') {
+        game.player.maxMana += ringData.value;
+        game.player.mana += ringData.value;
+        speak(`You equip the ${ringName}. Your max mana increased by ${ringData.value}! You have ${game.player.equippedRings.length} rings equipped.`);
+    } else if (ringData && ringData.stat === 'attack') {
+        speak(`You equip the ${ringName}. Your attacks are now stronger! You have ${game.player.equippedRings.length} rings equipped.`);
+    } else {
+        speak(`You equip the ${ringName}. You have ${game.player.equippedRings.length} rings equipped.`);
+    }
+}
+
+function removeRing(command) {
+    if (game.player.equippedRings.length === 0) {
+        speak('You have no rings equipped.');
+        return;
+    }
+    
+    // Find which ring to remove
+    let ringName = null;
+    
+    for (let ring of rings) {
+        if (command.includes(ring.name.toLowerCase())) {
+            ringName = ring.name;
+            break;
+        }
+    }
+    
+    if (command.includes('regeneration')) {
+        ringName = 'Ring of Regeneration';
+    }
+    
+    // If no specific ring named, list equipped
+    if (!ringName) {
+        const equippedCounts = {};
+        game.player.equippedRings.forEach(ring => {
+            equippedCounts[ring] = (equippedCounts[ring] || 0) + 1;
+        });
+        const equippedList = Object.entries(equippedCounts).map(([ring, count]) =>
+            count > 1 ? `${ring} x${count}` : ring
+        );
+        speak(`Equipped rings: ${equippedList.join(', ')}. Say which one to remove.`);
+        return;
+    }
+    
+    // Check if this ring is equipped
+    const ringIndex = game.player.equippedRings.findIndex(r => r === ringName);
+    if (ringIndex === -1) {
+        speak(`You do not have ${ringName} equipped.`);
+        return;
+    }
+    
+    // Get ring data
+    const ringData = rings.find(r => r.name === ringName);
+    
+    // Remove from equipped
+    game.player.equippedRings.splice(ringIndex, 1);
+    
+    // FIXED: Special handling for Ring of Regeneration
+    if (ringName === 'Ring of Regeneration') {
+        // Count non-regen rings currently equipped
+        const otherRings = game.player.equippedRings.filter(r => r !== 'Ring of Regeneration');
         
-        function equipRing(command) {
-            // Find which ring the player wants to equip
-            let ringName = null;
-            
-            for (let ring of rings) {
-                if (command.includes(ring.name.toLowerCase())) {
-                    ringName = ring.name;
-                    break;
-                }
-            }
-            
-            // Check for Ring of Regeneration from merchant
-            if (command.includes('regeneration')) {
-                ringName = 'Ring of Regeneration';
-            }
-            
-            // If no specific ring named, list available
-            if (!ringName) {
-                const availableRings = game.player.inventory.filter(item =>
-                    rings.some(r => r.name === item) || item === 'Ring of Regeneration'
-                );
-                if (availableRings.length > 0) {
-                    speak(`You have: ${availableRings.join(', ')}. Say which one to equip.`);
-                } else {
-                    speak('You have no rings. Find them in treasure chests or by searching rooms.');
-                }
-                return;
-            }
-            
-            // Check if player has this ring in inventory
-            const ringIndex = game.player.inventory.findIndex(item => item === ringName);
-            if (ringIndex === -1) {
-                speak(`You do not have a ${ringName}.`);
-                return;
-            }
-            
-            // Check if already wearing 10 rings
-            if (game.player.equippedRings.length >= 10) {
-                speak('You already have 10 rings equipped. Say remove ring first.');
-                return;
-            }
-            
-            // Check if already wearing 2 of the same ring (stack limit)
-            const equippedCount = game.player.equippedRings.filter(r => r === ringName).length;
-            if (equippedCount >= 2) {
-                speak(`You already have 2 ${ringName} equipped. You can only stack 2 of the same ring.`);
-                return;
-            }
-            
-            // Get ring data
-            const ringData = rings.find(r => r.name === ringName);
-            
-            // Remove from inventory and add to equipped
-            game.player.inventory.splice(ringIndex, 1);
-            game.player.equippedRings.push(ringName);
-            
-            // Apply stat bonuses
-            if (ringName === 'Ring of Regeneration') {
-                speak(`You equip the ${ringName}. You will restore 50 health per turn in combat! You have ${game.player.equippedRings.length} rings equipped.`);
-            } else if (ringData && ringData.stat === 'maxHealth') {
-                game.player.maxHealth += ringData.value;
-                game.player.health += ringData.value;
-                speak(`You equip the ${ringName}. Your max health increased by ${ringData.value}! You have ${game.player.equippedRings.length} rings equipped.`);
-            } else if (ringData && ringData.stat === 'maxMana') {
-                game.player.maxMana += ringData.value;
-                game.player.mana += ringData.value;
-                speak(`You equip the ${ringName}. Your max mana increased by ${ringData.value}! You have ${game.player.equippedRings.length} rings equipped.`);
-            } else if (ringData && ringData.stat === 'attack') {
-                speak(`You equip the ${ringName}. Your attacks are now stronger! You have ${game.player.equippedRings.length} rings equipped.`);
-            } else {
-                speak(`You equip the ${ringName}. You have ${game.player.equippedRings.length} rings equipped.`);
-            }
-        }
-
-        function removeRing(command) {
-            if (game.player.equippedRings.length === 0) {
-                speak('You have no rings equipped.');
-                return;
-            }
-            
-            // Find which ring to remove
-            let ringName = null;
-            
-            for (let ring of rings) {
-                if (command.includes(ring.name.toLowerCase())) {
-                    ringName = ring.name;
-                    break;
-                }
-            }
-            
-            if (command.includes('regeneration')) {
-                ringName = 'Ring of Regeneration';
-            }
-            
-            // If no specific ring named, list equipped
-            if (!ringName) {
-                const equippedCounts = {};
-                game.player.equippedRings.forEach(ring => {
-                    equippedCounts[ring] = (equippedCounts[ring] || 0) + 1;
-                });
-                const equippedList = Object.entries(equippedCounts).map(([ring, count]) =>
-                    count > 1 ? `${ring} x${count}` : ring
-                );
-                speak(`Equipped rings: ${equippedList.join(', ')}. Say which one to remove.`);
-                return;
-            }
-            
-            // Check if this ring is equipped
-            const ringIndex = game.player.equippedRings.findIndex(r => r === ringName);
-            if (ringIndex === -1) {
-                speak(`You do not have ${ringName} equipped.`);
-                return;
-            }
-            
-            // Get ring data
-            const ringData = rings.find(r => r.name === ringName);
-            
-            // Remove from equipped and add to inventory
-            game.player.equippedRings.splice(ringIndex, 1);
+        if (otherRings.length >= 10) {
+            // 10+ other rings = Regen goes to junkBag (can't re-equip)
+            game.player.junkBag.push(ringName);
+            speak(`Ring of Regeneration removed and sent to junk bag. With 10 other rings equipped, regeneration rings cannot be re-equipped. You have ${game.player.equippedRings.length} rings equipped.`);
+        } else {
+            // Less than 10 other rings = Can keep in inventory
             game.player.inventory.push(ringName);
-            
-            // Remove stat bonuses
-            if (ringName === 'Ring of Regeneration') {
-                speak(`You remove the ${ringName}. You have ${game.player.equippedRings.length} rings equipped.`);
-            } else if (ringData && ringData.stat === 'maxHealth') {
-                game.player.maxHealth -= ringData.value;
-                game.player.health = Math.min(game.player.health, game.player.maxHealth);
-                speak(`You remove the ${ringName}. Max health decreased by ${ringData.value}. You have ${game.player.equippedRings.length} rings equipped.`);
-            } else if (ringData && ringData.stat === 'maxMana') {
-                game.player.maxMana -= ringData.value;
-                game.player.mana = Math.min(game.player.mana, game.player.maxMana);
-                speak(`You remove the ${ringName}. Max mana decreased by ${ringData.value}. You have ${game.player.equippedRings.length} rings equipped.`);
-            } else if (ringData && ringData.stat === 'attack') {
-                speak(`You remove the ${ringName}. You have ${game.player.equippedRings.length} rings equipped.`);
-            } else {
-                speak(`You remove the ${ringName}. You have ${game.player.equippedRings.length} rings equipped.`);
-            }
+            speak(`You remove the ${ringName}. You have ${game.player.equippedRings.length} rings equipped.`);
         }
-
+    } else if (ringData && ringData.stat === 'maxHealth') {
+        game.player.inventory.push(ringName);
+        game.player.maxHealth -= ringData.value;
+        game.player.health = Math.min(game.player.health, game.player.maxHealth);
+        speak(`You remove the ${ringName}. Max health decreased by ${ringData.value}. You have ${game.player.equippedRings.length} rings equipped.`);
+    } else if (ringData && ringData.stat === 'maxMana') {
+        game.player.inventory.push(ringName);
+        game.player.maxMana -= ringData.value;
+        game.player.mana = Math.min(game.player.mana, game.player.maxMana);
+        speak(`You remove the ${ringName}. Max mana decreased by ${ringData.value}. You have ${game.player.equippedRings.length} rings equipped.`);
+    } else if (ringData && ringData.stat === 'attack') {
+        game.player.inventory.push(ringName);
+        speak(`You remove the ${ringName}. You have ${game.player.equippedRings.length} rings equipped.`);
+    } else {
+        game.player.inventory.push(ringName);
+        speak(`You remove the ${ringName}. You have ${game.player.equippedRings.length} rings equipped.`);
+    }
+}
         // ------------------------------------------------------------
         // SECTION 26: AMULET SYSTEM
         // ------------------------------------------------------------
@@ -4877,6 +4890,7 @@
     </script>
 </body>
 </html>
+
 
 
 
